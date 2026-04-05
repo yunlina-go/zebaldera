@@ -1,39 +1,36 @@
-import gradio as gr
-import math
+import streamlit as st
 
-
-def calculate_membership_fee(total_amount, num_people, tip_percentage):
-    # 1. 팁 포함 전체 금액 계산 (소수점 버림)
-    total_with_tip = math.floor(total_amount * (1 + tip_percentage / 100))
-
-    # 2. 인원 수로 나누어 1인당 금액 계산
-    if num_people and num_people > 0:
-        per_person = total_with_tip / num_people
-        # 3. 100단위에서 반올림
-        per_person_rounded = round(per_person, -3)
+# 로직 함수
+def analyze_text(user_input):
+    text_length = len(user_input)
+    word_count = len(user_input.split())
+    
+    if word_count < 5:
+        comment = "조금 짧은 문장이네요. 내용을 더 보완해 볼까요?"
+    elif word_count < 20:
+        comment = "적당한 길이의 문장입니다."
     else:
-        per_person_rounded = 0
+        comment = "꽤 긴 문장이네요. 핵심만 줄여 보는 것도 좋겠습니다."
+    
+    return text_length, word_count, comment
 
-    return per_person_rounded, total_with_tip
+# 스트림릿 화면 구성
+st.title("💡 텍스트 길이와 단어 수 분석기")
 
+user_input = st.text_area("분석할 문장을 입력하세요.", height=150)
 
-# Gradio 인터페이스 구성
-interface = gr.Interface(
-    fn=calculate_membership_fee,
-    inputs=[
-        gr.Number(label="총 금액(원)"),
-        gr.Number(label="인원 수(명)", precision=0),
-        gr.Slider(minimum=0, maximum=20, step=1, label="팁/서비스 비율(%)")
-    ],
-    outputs=[
-        gr.Number(label="1인당 금액(원) - 100단위 반올림"),
-        gr.Number(label="팁 포함 총 금액(원)")
-    ],
-    title="모임 회비 관리 계산기",
-    # 이 부분이 수정되었습니다: allow_flagging -> flagging_mode
-    flagging_mode="never"
-)
-
-# 프로그램 실행
-if __name__ == "__main__":
-    interface.launch()
+if st.button("분석하기"):
+    if user_input.strip():
+        length, count, comment = analyze_text(user_input)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.success(f"📏 문장 길이: {length}자")
+        with col2:
+            st.info(f"📝 단어 수: {count}개")
+            
+        st.write("---")
+        st.subheader("🧐 분석 결과")
+        st.write(comment)
+    else:
+        st.warning("문장을 입력해 주세요!")
